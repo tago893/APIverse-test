@@ -1,0 +1,5 @@
+flask
+requests_oauthlib
+google-cloud-datastore
+google-cloud-firestore
+gunicorn
