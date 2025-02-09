@@ -51,9 +51,9 @@
     function copyKey() {
         let apiKeyElement = document.getElementById("apiKey");
         navigator.clipboard.writeText(apiKeyElement.value).then(() => {
-            alert("✅ API Key copied to clipboard!");
+            alert(" API Key copied to clipboard!");
         }).catch(err => {
-            console.error("❌ Copy Error:", err);
+            console.error(" Copy Error:", err);
         });
     }
 
