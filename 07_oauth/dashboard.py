@@ -2,12 +2,10 @@ from flask import render_template, session, redirect, url_for, request
 from flask.views import MethodView
 from utils.api_key_generation import get_user_api_keys, store_api_key, revoke_api_key
 import time
-
 class Dashboard(MethodView):
     def get(self):
         """Display user details and API key management."""
         if 'user' not in session:
-            print("User not in session! Redirecting to index...")
             return redirect(url_for('index'))  # Redirect to home if not logged in
 
         user_info = session['user']
@@ -16,18 +14,30 @@ class Dashboard(MethodView):
 
         # Check if there is a temporary API key in session
         temp_api_key = session.get('temp_api_key', None)
-        if temp_api_key and time.time() < temp_api_key["expires_at"]:
-            raw_api_key = temp_api_key["api_key"]
+        if temp_api_key:
+            current_time = time.time()
+            if current_time >= temp_api_key["expires_at"]:
+                # Remove the expired API key from session
+                del session['temp_api_key']
+                raw_api_key = None
+            else:
+                # Pass the remaining time to the template
+                remaining_time = int(temp_api_key["expires_at"] - current_time)
+                raw_api_key = temp_api_key["api_key"]
         else:
-            raw_api_key = None  # Expired
+            raw_api_key = None
+            remaining_time = 0
 
-        return render_template('dashboard.html',
-                               name=user_info['name'],
-                               email=email,
-                               profile=user_info['picture'],
-                               api_keys=api_keys,
-                               raw_api_key=raw_api_key)
-
+        return render_template(
+            'dashboard.html',
+            name=user_info['name'],
+            email=email,
+            profile=user_info['picture'],
+            api_keys=api_keys,
+            raw_api_key=raw_api_key,
+            remaining_time=remaining_time  # Pass remaining time to the template
+        )
+        
     def post(self):
         """Handle API key generation or revocation."""
         if 'user' not in session:
