@@ -1,11 +1,14 @@
 import flask
-from index import Index
-from dashboard import Dashboard
-from login import Login
-from signup import Signup
-from logout import Logout
+from app.dashboard import Dashboard
+from app.index import Index
+from app.login import Login
+from app.logout import Logout
+from app.signup import Signup
+
+
 import os
-app = flask.Flask(__name__)       
+app = flask.Flask(__name__, template_folder='static/templates')       
+app.secret_key = os.urandom(24)
 
 app.add_url_rule('/',
                  view_func=Index.as_view('index'),
@@ -28,4 +31,4 @@ app.add_url_rule('/logout',
                  methods=["GET"])
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0')

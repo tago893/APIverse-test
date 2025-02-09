@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Welcome to APIverse</h2>
+<p>Your one-stop API hub!</p>
+
+<h3>Available APIs:</h3>
+<ul>
+    <li><strong>Random Text Generator:</strong> <code>/random-text</code></li>
+    <li><strong>Weather API (Coming Soon):</strong> <code>/weather</code></li>
+</ul>
+
+<a href="{{ url_for('dashboard') }}">
+    <button>Go to Dashboard</button>
+</a>
+
+{% endblock %}
