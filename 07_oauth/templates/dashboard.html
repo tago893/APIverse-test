@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2>Welcome, {{ name }}!</h2>
+<img src="{{ profile }}" width=50px height=50px referrerpolicy="no-referrer">
+<p>Email: {{ email }}</p>
+
+<h3>API Key Management</h3>
+
+{% if raw_api_key %}
+<p>Your new API Key (Copy now, expires in <span id="countdown"></span> seconds):</p>
+<p>
+    <strong id="apiKey">{{ raw_api_key }}</strong>
+    <button onclick="copyKey()">Copy API Key</button>
+</p>
+{% else %}
+<form action="{{ url_for('dashboard') }}" method="post">
+    <input type="submit" value="Generate New API Key">
+</form>
+{% endif %}
+
+<h4>Your API Keys:</h4>
+{% if api_keys %}
+<ul>
+    {% for key in api_keys %}
+    <li>
+        Key ID: {{ key.api_key_id }} - Masked: {{ key.masked_key }}
+        | Expiration: {{ key.expires_at.strftime('%Y-%m-%d') }}
+
+        <form action="{{ url_for('dashboard') }}" method="post" onsubmit="return confirmRevoke();">
+            <input type="hidden" name="revoke_key" value="{{ key.api_key_id }}">
+            <input type="submit" value="Revoke">
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No active API keys.</p>
+{% endif %}
+
+<br>
+<a href="{{ url_for('logout') }}">Logout</a>
+
+<script>
+    function copyKey() {
+        let apiKeyElement = document.getElementById("apiKey");
+
+        if (!apiKeyElement) {
+            alert("❌ No API Key available to copy.");
+            return;
+        }
+
+        let apiKeyText = apiKeyElement.innerText.trim(); // ✅ Trim whitespace
+
+        navigator.clipboard.writeText(apiKeyText).then(() => {
+            alert("✅ API Key copied to clipboard!");
+        }).catch(err => {
+            alert("❌ Failed to copy API Key.");
+            console.error("Copy Error:", err);
+        });
+    }
+
+    function confirmRevoke() {
+        return confirm("⚠️ Are you sure you want to revoke this key?");
+    }
+
+    // Countdown for API Key visibility
+    let countdown = 60;
+    let countdownElement = document.getElementById("countdown");
+    if (countdownElement) {
+        let interval = setInterval(function () {
+            countdown -= 1;
+            countdownElement.innerText = countdown;
+            if (countdown <= 0) {
+                clearInterval(interval);
+                location.reload();  // Refresh page when countdown ends
+            }
+        }, 1000);
+    }
+</script>
+
+{% endblock %}

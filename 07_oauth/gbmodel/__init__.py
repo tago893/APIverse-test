@@ -1,14 +1,10 @@
 model_backend = 'datastore'
-#model_backend = 'firestore'
-
 if model_backend == 'datastore':
-    from .model_datastore import model
-elif model_backend == 'firestore':
-    from .model_firestore import model
+    from .model_datastore import UserModel
 else:
     raise ValueError("No appropriate databackend configured. ")
 
-appmodel = model()
+appmodel = UserModel()
 
 def get_model():
     return appmodel
