@@ -1,35 +1,43 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<h2>Welcome, {{ name }}!</h2>
-<img src="{{ profile }}" width=50px height=50px referrerpolicy="no-referrer">
-<p>Email: {{ email }}</p>
+<h2>API Key</h2>
 
-<h3>API Key Management</h3>
+<div class="api-key-box">
+    <p><strong>Email:</strong> {{ email }}</p>
 
-{% if raw_api_key %}
-<p>Your new API Key (Copy now, expires in <span id="countdown"></span> seconds):</p>
-<p>
-    <strong id="apiKey">{{ raw_api_key }}</strong>
-    <button onclick="copyKey()">Copy API Key</button>
-</p>
-{% else %}
-<form action="{{ url_for('dashboard') }}" method="post">
-    <input type="submit" value="Generate New API Key">
-</form>
-{% endif %}
+    {% if raw_api_key %}
+    <div class="api-key-section">
+        <input type="text" id="apiKey" value="{{ raw_api_key }}" readonly>
+        <button onclick="copyKey()">
+            <img src="{{ url_for('static', filename='copy-icon.png') }}" alt="Copy" width="20px">
+        </button>
+    </div>
+    <p>
+        <small>This API key will expire in <span id="countdown">60</span> seconds.</small>
+    </p>
+    {% else %}
+    <form action="{{ url_for('dashboard') }}" method="post">
+        <input type="submit" value="Generate API Key" class="btn-generate">
+    </form>
+    {% endif %}
 
-<h4>Your API Keys:</h4>
+    <div class="api-key-buttons">
+        <form action="{{ url_for('dashboard') }}" method="post" style="display:inline;">
+            <input type="submit" value="Regenerate" class="btn-black">
+        </form>
+    </div>
+</div>
+
+<h3>Your API Keys:</h3>
 {% if api_keys %}
-<ul>
+<ul class="api-keys-list">
     {% for key in api_keys %}
     <li>
-        Key ID: {{ key.api_key_id }} - Masked: {{ key.masked_key }}
-        | Expiration: {{ key.expires_at.strftime('%Y-%m-%d') }}
-
-        <form action="{{ url_for('dashboard') }}" method="post" onsubmit="return confirmRevoke();">
+        Masked Key: {{ key.masked_key }} | Expiration: {{ key.expires_at.strftime('%Y-%m-%d') }}
+        <form action="{{ url_for('dashboard') }}" method="post" style="display:inline;">
             <input type="hidden" name="revoke_key" value="{{ key.api_key_id }}">
-            <input type="submit" value="Revoke">
+            <input type="submit" value="Revoke" class="btn-revoke">
         </form>
     </li>
     {% endfor %}
@@ -38,42 +46,26 @@
 <p>No active API keys.</p>
 {% endif %}
 
-<br>
-<a href="{{ url_for('logout') }}">Logout</a>
-
 <script>
     function copyKey() {
         let apiKeyElement = document.getElementById("apiKey");
-
-        if (!apiKeyElement) {
-            alert("❌ No API Key available to copy.");
-            return;
-        }
-
-        let apiKeyText = apiKeyElement.innerText.trim(); // ✅ Trim whitespace
-
-        navigator.clipboard.writeText(apiKeyText).then(() => {
+        navigator.clipboard.writeText(apiKeyElement.value).then(() => {
             alert("✅ API Key copied to clipboard!");
         }).catch(err => {
-            alert("❌ Failed to copy API Key.");
-            console.error("Copy Error:", err);
+            console.error("❌ Copy Error:", err);
         });
     }
 
-    function confirmRevoke() {
-        return confirm("⚠️ Are you sure you want to revoke this key?");
-    }
-
     // Countdown for API Key visibility
-    let countdown = 60;
+    let countdown = 60; // Timer starts at 60 seconds
     let countdownElement = document.getElementById("countdown");
     if (countdownElement) {
         let interval = setInterval(function () {
             countdown -= 1;
-            countdownElement.innerText = countdown;
+            countdownElement.innerText = countdown; // Update the countdown UI
             if (countdown <= 0) {
                 clearInterval(interval);
-                location.reload();  // Refresh page when countdown ends
+                location.reload(); // Refresh the page when timer reaches 0
             }
         }, 1000);
     }

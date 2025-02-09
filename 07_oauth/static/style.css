@@ -1,8 +1,149 @@
-body       { font-family: "Helvetica", sans-serif; font-size: 20px; color: #008303; }
-a, h1, h2  { color: #00008F; }
-form       { margin:.1em auto; padding:.1em; width: 400px; border: 1px }
-.heading  { font-weight: bold; }
-.page      { margin:.1em auto; padding:.1em; width: 504px;  }
-.entry     { margin-bottom: 2em; padding-bottom: 2em; border-bottom: 1px solid #888; }
-input[type=text] { margin: .5em 0; padding: .5em; font-size: 12px; color: #777; width: 200px;}
-input[type=textarea] { margin: .5em 0; padding: .5em; font-size: 12px; color: #777; width: 200px;}
+/* 🌟 General Styles */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+h2 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* 🌟 API Key Box */
+.api-key-box {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: inline-block;
+    width: 80%;
+    max-width: 500px;
+    margin: 20px auto;
+}
+
+.api-key-box p {
+    margin: 0 0 10px;
+    font-size: 16px;
+    color: #333;
+}
+
+/* 🌟 API Key Input */
+.api-key-section {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.api-key-section input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    margin-right: 10px;
+    background-color: #f8f8f8;
+}
+
+.api-key-section button {
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.api-key-section button:hover {
+    background-color: #f0f0f0;
+}
+
+/* 🌟 API Key Buttons */
+.api-key-buttons {
+    margin-top: 15px;
+}
+
+.btn-green {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-right: 10px;
+    transition: 0.3s;
+}
+
+.btn-green:hover {
+    background-color: #218838;
+}
+
+.btn-black {
+    background-color: black;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.3s;
+}
+
+.btn-black:hover {
+    background-color: #333;
+}
+
+/* 🌟 API Keys List */
+.api-keys-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 20px auto;
+    width: 80%;
+    max-width: 500px;
+}
+
+.api-keys-list li {
+    background-color: white;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+}
+
+.api-keys-list .btn-revoke {
+    background-color: #e74c3c;
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: 0.3s;
+}
+
+.api-keys-list .btn-revoke:hover {
+    background-color: #c0392b;
+}
+
+/* 🌟 Responsive Design */
+@media screen and (max-width: 768px) {
+    .api-key-box {
+        width: 95%;
+    }
+
+    .api-keys-list {
+        width: 95%;
+    }
+
+    .api-keys-list li {
+        flex-direction: column;
+        text-align: center;
+    }
+}
