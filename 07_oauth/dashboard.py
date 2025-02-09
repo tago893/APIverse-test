@@ -14,19 +14,19 @@ class Dashboard(MethodView):
 
         # Check if there is a temporary API key in session
         temp_api_key = session.get('temp_api_key', None)
+        raw_api_key = None
+        remaining_time = 0
+
         if temp_api_key:
             current_time = time.time()
-            if current_time >= temp_api_key["expires_at"]:
-                # Remove the expired API key from session
-                del session['temp_api_key']
-                raw_api_key = None
-            else:
-                # Pass the remaining time to the template
-                remaining_time = int(temp_api_key["expires_at"] - current_time)
+            if current_time < temp_api_key["expires_at"]:
+                # Make the key available temporarily
                 raw_api_key = temp_api_key["api_key"]
-        else:
-            raw_api_key = None
-            remaining_time = 0
+                remaining_time = int(temp_api_key["expires_at"] - current_time)
+
+        # Remove the temporary API key from the session immediately after rendering
+        if 'temp_api_key' in session:
+            del session['temp_api_key']  # Ensure key is invalidated after initial load
 
         return render_template(
             'dashboard.html',
@@ -37,7 +37,7 @@ class Dashboard(MethodView):
             raw_api_key=raw_api_key,
             remaining_time=remaining_time  # Pass remaining time to the template
         )
-        
+
     def post(self):
         """Handle API key generation or revocation."""
         if 'user' not in session:
