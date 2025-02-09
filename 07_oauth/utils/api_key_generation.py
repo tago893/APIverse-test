@@ -3,7 +3,7 @@ import hashlib
 import time
 from google.cloud import datastore
 from datetime import datetime, timedelta,timezone
-from flask.views import MethodView  # ✅ Import MethodView
+from flask.views import MethodView 
 
 def generate_salt():
     """Generate a unique salt value."""
