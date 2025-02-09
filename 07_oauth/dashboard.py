@@ -7,7 +7,7 @@ class Dashboard(MethodView):
     def get(self):
         """Display user details and API key management."""
         if 'user' not in session:
-            print("❌ User not in session! Redirecting to index...")
+            print("User not in session! Redirecting to index...")
             return redirect(url_for('index'))  # Redirect to home if not logged in
 
         user_info = session['user']
@@ -42,7 +42,7 @@ class Dashboard(MethodView):
             if success:
                 print(f"✅ Successfully revoked API Key ID: {revoke_key}")
             else:
-                print(f"❌ Failed to revoke API Key ID: {revoke_key}")
+                print(f" Failed to revoke API Key ID: {revoke_key}")
             return redirect(url_for('dashboard'))  # Refresh dashboard after revocation
 
         # ✅ Generate a new API key
@@ -54,17 +54,17 @@ class Dashboard(MethodView):
 class GenerateKey(MethodView):
     def post(self):
         """Generate a new API key and redirect to dashboard."""
-        print("✅ Generate API Key Button Clicked!")  # Debugging print
+        print(" Generate API Key Button Clicked!")  # Debugging print
 
         if 'user' not in session:
-            print("❌ User not in session! Redirecting to index...")
+            print(" User not in session! Redirecting to index...")
             return redirect(url_for('index'))
 
         email = session['user']['email']
         print(f"🔹 User Email Found: {email}")  # Debugging print
 
         raw_api_key = store_api_key(email, session)  # Store API key
-        print(f"✅ API Key Generated: {raw_api_key}")  # Debugging print
+        print(f"API Key Generated: {raw_api_key}")  # Debugging print
 
         return redirect(url_for('dashboard'))  # Refresh dashboard
 
