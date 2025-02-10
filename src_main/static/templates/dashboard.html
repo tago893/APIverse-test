@@ -1,8 +1,12 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<h2>API Key</h2>
+<!-- Link External CSS File -->
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
 
+<h2>Manage Your API Keys</h2>
+
+<!-- API Key Display Box -->
 <div class="api-key-box">
     <p><strong>Email:</strong> {{ email }}</p>
 
@@ -28,12 +32,13 @@
     </div>
 </div>
 
-<h3>Your API Keys:</h3>
+<h3>Your API Keys</h3>
 {% if api_keys %}
 <ul class="api-keys-list">
     {% for key in api_keys %}
     <li>
-        Masked Key: {{ key.masked_key }} | Expiration: {{ key.expires_at.strftime('%Y-%m-%d') }}
+        <span>Masked Key: <strong>{{ key.masked_key }}</strong></span>
+        <span>Expires: <strong>{{ key.expires_at.strftime('%Y-%m-%d') }}</strong></span>
         <form action="{{ url_for('dashboard') }}" method="post" style="display:inline;">
             <input type="hidden" name="revoke_key" value="{{ key.api_key_id }}">
             <input type="submit" value="Revoke" class="btn-revoke">
