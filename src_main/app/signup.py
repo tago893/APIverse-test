@@ -1,6 +1,6 @@
 from flask import render_template, request, redirect, url_for, session
 from flask.views import MethodView
-from model.model_datastore import UserModel
+from model.model_datastore import model
 
 
 class Signup(MethodView):
@@ -14,7 +14,7 @@ class Signup(MethodView):
         email = request.form.get('email')
         password = request.form.get('password')
 
-        user_model = UserModel()
+        user_model = model()
         success = user_model.insert_user(name, email, password)
 
         if success:

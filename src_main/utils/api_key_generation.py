@@ -1,12 +1,12 @@
 import secrets
 import hashlib
 import time
-from google.cloud import datastore
 from datetime import datetime, timedelta, timezone
 from flask import session
+from model.model_datastore import model
 
-# Initialize Datastore Client with explicit namespace configuration
-client = datastore.Client(project='cloud-varun-varunch', namespace="apiverse")
+# Initialize Datastore Model
+datastore_model = model()
 
 def generate_salt():
     """Generate a unique salt value."""
@@ -23,102 +23,87 @@ def hash_api_key(api_key, salt):
 
 def store_api_key(user_email, session):
     """Generate and store a unique API key using a salted hash."""
-    client = datastore.Client(project='cloud-varun-varunch', namespace="apiverse")
-    print(f"Datastore Client Namespace: {client.namespace}")
-
-    raw_api_key = generate_api_key()  # Generate API key
-    salt = generate_salt()  # Generate salt
-    hashed_api_key = hash_api_key(raw_api_key, salt)  # Hash API key
-    expiration_date = datetime.now(timezone.utc) + timedelta(days=30)  # Set expiration
-
-    # Create key
-    key = client.key('APIKey')
-    print(f"Generated Key: {key}")
-
-    # Create entity
-    entity = datastore.Entity(key)
-    entity.update({
-        'user_email': user_email,
-        'salt': salt,
-        'hashed_api_key': hashed_api_key,
-        'created_at': datetime.now(timezone.utc),
-        'expires_at': expiration_date,
-        'revoked': False
-    })
-    print(f"Entity Data to Save: {entity}")
-
-    # Save entity to Datastore
     try:
-        client.put(entity)
-        print(f"API Key successfully saved for user: {user_email}")
+        # Generate new API key components
+        raw_api_key = generate_api_key()
+        salt = generate_salt()
+        hashed_api_key = hash_api_key(raw_api_key, salt)
+        expiration_date = datetime.now(timezone.utc) + timedelta(days=30)
+
+        # Store API key in Datastore
+        datastore_model.store_api_key(
+            user_email=user_email,
+            salt=salt,
+            hashed_api_key=hashed_api_key,
+            expiration_date=expiration_date
+        )
+
+        # Store raw API key temporarily in session
+        session['temp_api_key'] = {
+            "api_key": raw_api_key,
+            "expires_at": time.time() + 60
+        }
+        return raw_api_key
+
     except Exception as e:
-        print(f"Error saving API Key: {e}")
-
-    # Store raw API key in session
-    session['temp_api_key'] = {
-        "api_key": raw_api_key,
-        "expires_at": time.time() + 60  # Expiry timestamp
-    }
-
-    return raw_api_key
+        print(f"Error storing API key: {e}")
+        return None
 
 def get_user_api_keys(user_email):
-    """Retrieve all non-revoked API keys for a given user, showing only masked versions."""
-    query = client.query(kind='APIKey')
-    query.add_filter('user_email', '=', user_email)
-    query.add_filter('revoked', '=', False)  # Only return active keys
-    api_keys = list(query.fetch())
-
-    return [{
-        'api_key_id': key.id,
-        'masked_key': '************' + key['hashed_api_key'][-4:],  # Show only last 4 characters
-        'expires_at': key['expires_at']  # Expiration date
-    } for key in api_keys if datetime.now(timezone.utc) < key['expires_at']]
-
-def validate_api_key(api_key):
-    """Validate an API key by checking if it's valid, not expired, and not revoked."""
-    query = client.query(kind='APIKey')
-    results = list(query.fetch())
-
-    for entry in results:
-        salt = entry['salt']
-        stored_hashed_key = entry['hashed_api_key']
-        expires_at = entry['expires_at']
-        revoked = entry.get('revoked', False)  # Check if key is revoked
-
-        # Check if the key is expired
-        if datetime.now(timezone.utc) > expires_at:
-            return False  # Key is expired
-
-        # Check if the key is revoked
-        if revoked:
-            return False  # Key has been revoked
-
-        # Recompute the hash with the retrieved salt
-        if stored_hashed_key == hash_api_key(api_key, salt):
-            return True  # API key is valid
-
-    return False  # No valid key found
-
-def revoke_api_key(user_email, api_key_id):
-    """Manually revoke an API key using its ID."""
+    """Fetch all active API keys for a user."""
     try:
-        # Create key (namespace is already set in the client)
-        key = client.key('APIKey', int(api_key_id))
-        entity = client.get(key)
-
-        if entity:
-            if entity.get('user_email') == user_email:
-                entity['revoked'] = True  # Mark as revoked
-                client.put(entity)  # Save updated entity
-                print(f"✅ API Key {api_key_id} revoked successfully.")
-                return True
-            else:
-                print(f"❌ API Key {api_key_id} does not belong to {user_email}.")
-        else:
-            print(f"❌ API Key {api_key_id} not found in Datastore.")
+        api_keys = datastore_model.get_user_api_keys(user_email)
+        
+        # Filter and format API keys
+        current_time = datetime.now(timezone.utc)
+        return [{
+            'api_key_id': key.id,
+            'masked_key': '************' + key['hashed_api_key'][-4:],  # Show last 4 chars
+            'expires_at': key['expires_at']
+        } for key in api_keys 
+          if not key.get('revoked', False) and 
+             key['expires_at'] > current_time]
 
     except Exception as e:
-        print(f"❌ Error revoking API Key: {e}")
+        print(f"Error fetching API keys: {e}")
+        return []
+def validate_api_key(api_key):
+    """Validate an API key by checking its existence, expiration, and revocation status."""
+    try:
+        # Get all active API keys
+        api_keys = datastore_model.get_all_active_api_keys()  # Use new method
+        current_time = datetime.now(timezone.utc)
 
-    return False  # Revocation failed
+        # Check each key
+        for entry in api_keys:
+            # Skip if expired
+            if entry['expires_at'] <= current_time:
+                continue
+
+            # Compare hashed values
+            salt = entry['salt']
+            stored_hash = entry['hashed_api_key']
+            test_hash = hash_api_key(api_key, salt)
+
+            if test_hash == stored_hash:
+                return True
+
+        return False
+
+    except Exception as e:
+        print(f"Error validating API key: {e}")
+        return False
+
+def revoke_api_key(user_email, api_key_id):
+    """Revoke an API key."""
+    try:
+        success = datastore_model.revoke_api_key(user_email, api_key_id)
+        if success:
+            print(f"✅ API Key {api_key_id} revoked successfully")
+        else:
+            print(f"❌ Failed to revoke API Key {api_key_id}")
+        return success
+
+    except Exception as e:
+        print(f"Error revoking API key: {e}")
+        return False
